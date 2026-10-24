@@ -57,6 +57,12 @@ uv run python -m app.ask "AIE2026の講座で使う「lecNN-start タグ」と�
 uv run python -m app.ask "AIE2026の第2回では何を学びますか？"
 ```
 
+`--interactive` を付けると、1つの会話の履歴を保ったまま続けて質問できます。左右キーで入力位置を移動し、Backspace で文字を削除できます。`exit` または `quit` で終了します。
+
+```bash
+uv run python -m app.ask --interactive
+```
+
 ### 6. Copilot でトークン数を表示させる
 
 `app/ask.py` の `TODO(第1回 演習)` の場所で、入力トークン数と出力トークン数を表示するよう改修します。Copilot の補完やチャットを使ってかまいません。提案されたコードは、読んで理解してから採用してください。
