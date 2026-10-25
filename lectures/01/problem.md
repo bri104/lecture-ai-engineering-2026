@@ -91,6 +91,16 @@ GitHub の自分の fork で、`lec01` → `main` の PR を作成します。**
 | 実装 | `app/ask.py` を改修し、会話履歴を保ったまま続けて質問できるようにする |
 | 発展 | 応答時間とトークン数を計測し、複数のモデルや質問で比較する。無料枠のレート制限との関係も考察する |
 
+発展課題では、各リクエストの計測結果が作業ディレクトリの `metrics.jsonl` に1行ずつ追記されます。モデル名・質問・UTC時刻・応答時間・入出力トークン数・HTTPステータスが記録されるので、同じ質問を複数モデルで実行し、結果を比べられます。別ファイルへ出すには `--metrics-file` を指定します。
+
+```bash
+uv run python -m app.ask "LoRAとは何ですか？"
+AIE_MODEL=gemini-3.5-flash uv run python -m app.ask "LoRAとは何ですか？"
+uv run python -m app.ask --interactive --metrics-file comparison.jsonl
+```
+
+`metrics.jsonl` には入力した質問も含まれます。共有する前に内容を確認してください。ログの時刻・モデル・トークン数・失敗したHTTPステータス（429など）から、短時間・1日の呼び出し数や使用量とレート制限の関係を考察できます。ただし、このログに記録されるのはこのスクリプトからの呼び出しだけです。無料枠の上限や他のアプリからの使用量は、Google AI Studio と [Gemini API のレート制限](https://ai.google.dev/gemini-api/docs/rate-limits) で確認してください。上限はモデルや利用状況により異なります。
+
 モデルの切り替え例：
 
 ```bash

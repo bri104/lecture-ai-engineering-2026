@@ -2,6 +2,7 @@
 __pycache__/
 .pytest_cache/
 *.pyc
+*.jsonl
 
 # 秘密情報はコミットしない（APIキーは Codespaces secret で渡す）
 .env
