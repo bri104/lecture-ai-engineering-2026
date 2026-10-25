@@ -87,4 +87,4 @@ pyproject.toml / uv.lock  依存パッケージとその固定版
 AIE_MODEL=gemini-3.5-flash uv run python -m app.ask "LoRAとは何ですか？"
 ```
 
-無料枠には1分あたり・1日あたりのリクエスト上限があります。上限は [Gemini API のレート制限のページ](https://ai.google.dev/gemini-api/docs/rate-limits) で確認してください。
+`app.ask` は各リクエストのモデル・質問・UTC時刻・応答時間・トークン数・HTTPステータスを、既定で `metrics.jsonl` に追記します。`--metrics-file` で保存先を変更できます。ログには質問文が含まれるため共有前に確認してください。このログはこのスクリプトからの呼び出しだけを記録し、無料枠の上限や他のアプリの利用量は [Gemini API のレート制限のページ](https://ai.google.dev/gemini-api/docs/rate-limits) と Google AI Studio で確認してください。
