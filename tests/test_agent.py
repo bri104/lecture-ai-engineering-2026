@@ -5,11 +5,15 @@ TestModel は実際のLLMを呼ばない偽モデルで、登録されたツー�
 「ツールが登録され、呼ばれ、結果がモデルに戻るか」を確かめられる。
 """
 
+from io import StringIO
+from types import SimpleNamespace
+from unittest.mock import patch
+
 from pydantic_ai import DeferredToolRequests
 from pydantic_ai.messages import ToolCallPart, ToolReturnPart
 from pydantic_ai.models.test import TestModel
 
-from app.agent import agent
+from app.agent import agent, print_trace
 
 BASE_TOOLS = {"search_glossary", "get_lecture_summary"}
 
@@ -40,3 +44,18 @@ def test_glossary_result_reaches_the_model():
         result = agent.run_sync("RAGとは？")
     returns = _parts(result, ToolReturnPart)
     assert returns and returns[0].tool_name == "search_glossary"
+
+
+def test_print_trace_does_not_truncate_tool_returns():
+    content = "x" * 121
+    message = SimpleNamespace(parts=[ToolReturnPart("search_glossary", content)])
+    result = SimpleNamespace(
+        all_messages=lambda: [message],
+        usage=lambda: "usage",
+    )
+
+    output = StringIO()
+    with patch("sys.stdout", output):
+        print_trace(result)
+
+    assert f"[tool return] search_glossary -> {content}" in output.getvalue()

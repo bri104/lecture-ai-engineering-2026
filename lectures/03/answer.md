@@ -72,7 +72,83 @@
 
 ## 宿題
 
-- 取り組んだレベル：基礎 / 実装 / 発展
+- 取り組んだレベル：基礎 ~~/ 実装 / 発展~~
 - やったこと：
+  - app/tools.py の search_glossary の docstring を変更
+  - before  
+    ```
+    def search_glossary(query: str) -> str:
+    """講座の用語集から用語を検索し、定義と、どの回で扱うかを返す。
+
+    AIエンジニアリングの用語や、この講座（AIE2026）に固有の言葉について
+    答える前に使うこと。query には調べたい用語を1つだけ入れる（例: "LoRA"）。
+    """
+    ```
+  - after
+    ```
+    def search_glossary(query: str) -> str:
+    """講座の用語集から用語を検索し、定義と、どの回で扱うかを返す。
+
+    AIエンジニアリングの用語や、この講座（AIE2026）に固有の言葉について
+    答える前に使うこと。query には調べたい用語をまとめて入れる。
+    """
+    ```
+
 - 結果：
+  - 実行内容
+    ```
+    uv run python -m app.agent --trace "LoRAとQLoRAの違いは？"
+    ```
+  - 実行結果（before)
+    > [model] gemini-3.5-flash-lite  
+    > **LoRA（Low-Rank Adaptation）**と**QLoRA（Quantized LoRA）**の違いは、ベースモデルの重みをそのまま使うか、量子化して圧縮するかという点にあります。
+    > 
+    > * **LoRA**:
+    >   事前学習済みの重みは固定したまま、重みの更新分を低ランク行列（小さな行列の積）で近似し、その部分だけを学習するPEFT（Parameter-Efficient Fine-Tuning）手法です。学習パラメータや保存ファイルを大幅に削減できます。
+    > 
+    > * **QLoRA**:
+    >   LoRAの仕組みに加え、ベースモデルの重みを4ビットなどに**量子化**（精度を落として圧縮）してからLoRAを適用する手法です。これにより、元のモデルの精度を保ちつつ、さらに必要なメモリを大幅に削減し、より小さなGPUでも大きなモデルを扱えるようになります。
+    > 
+    > 関係する回：第2回
+    > 
+    > --- trace ---  
+    > [tool call]   search_glossary({'query': 'LoRA'})  
+    > [tool call]   search_glossary({'query': 'QLoRA'})  
+    > [tool return] search_glossary -> [{"term": "LoRA", "lecture": 2, "definition": "事前学習済みの重みは固定したまま、重みの更新分を2つの小さな行列の積（低ランク行列）で表し、その小さな行列だけを学習するPEFT手法。学習するパラ…  
+    > [tool return] search_glossary -> [{"term": "QLoRA", "lecture": 2, "definition": "ベースモデルの重みを4ビットなどに量子化してメモリを節約したうえで、LoRAで学習する手法。より大きなモデルを小さなGPUで扱える。本講座の第2…  
+    > [usage] RunUsage(cost=Decimal('0.0009975'), details={'text_prompt_tokens': 1400}, input_text_tokens=1400, input_tokens=1400, output_tokens=231, requests=2, tool_calls=2)
+
+  - 実行結果（after）
+    > [model] gemini-3.5-flash-lite  
+    > **LoRA（Low-Rank Adaptation）**と**QLoRA（Quantized LoRA）**は、どちらも大規模言語モデル（LLM）などを効率的にファインチューニング（追加学習）するためのPEFT（Parameter-Efficient Fine-Tuning）手法です。
+    > 
+    > それぞれの主な違いは以下の通りです。
+    > 
+    > * **LoRA**
+    >   * 事前学習済みの重みを固定したまま、更新分（低ランク行列）だけを学習することで、学習パラメータ数を大幅に削減する手法です。
+    >   * 元のモデルの重みは通常そのまま（FP16やBF16など）の精度で保持します。
+    > 
+    > * **QLoRA**
+    >   * LoRAの仕組みに「量子化（Quantization）」を組み合わせた手法です。
+    >   * ベースモデルの重みを **4ビット** などに強く量子化してメモリ使用量を極限まで削減し、その上でLoRAによる学習を行います。これにより、限られたGPUメモリでも非常に大きなモデルの学習が可能になります。
+    > 
+    > 第2回
+    > 
+    > （参考：第2回ではLoRAの仕組みと演習を扱い、発展として4ビット量子化による違いなども比較します）
+    > 
+    > --- trace ---  
+    > [tool call]   search_glossary({'query': 'LoRA QLoRA'})  
+    > [tool return] search_glossary -> [{"term": "LoRA", "lecture": 2, "definition": "事前学習済みの重みは固定したまま、重みの更新分を2つの小さな行列の積（低ランク行列）で表し、その小さな行列だけを学習するPEFT手法。学習するパラ…  
+    > [usage] RunUsage(cost=Decimal('0.0010000'), details={'text_prompt_tokens': 1075}, input_text_tokens=1075, input_tokens=1075, output_tokens=271, requests=2, tool_calls=1)
+
 - 気づき・疑問：
+  - search_glossaryのqueryへ'LoRA QLoRA'と入力され、tool callが1回に減った。
+  - LLMの呼び出し回数は変化なし。
+  - 上記tool returnでsearch_glossaryの結果ではLoRAのみが返っているように見える。app.agentの結果ではQLoRAについても回答できているように思える。
+  - tool returnに文字数制限がかかっているため、文字数制限を無くした結果のtraceは以下のとおり。
+    > --- trace ---  
+    > [tool call]   search_glossary({'query': 'LoRA QLoRA'})  
+    > [tool return] search_glossary -> [{"term": "LoRA", "lecture": 2, "definition": "事前学習済みの重みは固定したまま、重みの更新分を2つの小さな行列の積（低ランク行列）で表し、その小さな行列だけを学習するPEFT手法。学習するパラメータが少なく、学習結果（アダプタ）も小さいファイルで保存できる。本講座の第2回演習ではLoRAを扱う。", "related": ["peft", "lora-rank", "qlora"]}, {"term": "QLoRA", "lecture": 2, "definition": "ベースモデルの重みを4ビットなどに量子化してメモリを節約したうえで、LoRAで学習する手法。より大きなモデルを小さなGPUで扱える。本講座の第2回演習ではモデルがGPUに載るためLoRAで学習し、4ビットで読み込んだときのメモリと出力の違いを発展で比べる。", "related": ["lora","quantization"]}]  
+    > [usage] RunUsage(cost=Decimal('0.0007975'), details={'text_prompt_tokens': 1075}, input_text_tokens=1075, input_tokens=1075, output_tokens=190, requests=2, tool_calls=1)  
+  - 結果、LoRA、QloRAそれぞれをdata/glossary.json内で検索していることがわかった。
+

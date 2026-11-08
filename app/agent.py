@@ -107,7 +107,7 @@ def print_trace(result) -> None:
             if isinstance(part, ToolCallPart):
                 print(f"[tool call]   {part.tool_name}({part.args})")
             elif isinstance(part, ToolReturnPart):
-                print(f"[tool return] {part.tool_name} -> {str(part.content)[:120]}…")
+                print(f"[tool return] {part.tool_name} -> {str(part.content)}")
     print(f"[usage] {result.usage}")
 
 
