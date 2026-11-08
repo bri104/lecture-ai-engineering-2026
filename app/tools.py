@@ -6,10 +6,13 @@
 
 import json
 import random
+import re
+from datetime import datetime
 from functools import cache
 from pathlib import Path
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+LEARNING_LOG_DIR = Path(__file__).resolve().parent.parent / "learning_log"
 MAX_RESULTS = 3
 
 
@@ -33,7 +36,7 @@ def search_glossary(query: str) -> str:
     """講座の用語集から用語を検索し、定義と、どの回で扱うかを返す。
 
     AIエンジニアリングの用語や、この講座（AIE2026）に固有の言葉について
-    答える前に使うこと。query には調べたい用語をまとめて入れる。
+    答える前に使うこと。query には調べたい用語を1つだけ入れる（例: "LoRA"）。
     """
     q = _normalize(query)
     if not q:
@@ -101,3 +104,19 @@ def make_quiz(lecture: int) -> str:
         },
         ensure_ascii=False,
     )
+
+
+def save_learning_log(title: str, content: str) -> str:
+    """学習した内容を learning_log フォルダに Markdown として保存する。
+
+    title は保存する学習記録の見出し、content は本文として使う。
+    """
+    LEARNING_LOG_DIR.mkdir(parents=True, exist_ok=True)
+    safe_title = re.sub(r"[^\w\- ]", "", title, flags=re.UNICODE).strip()
+    safe_title = safe_title.replace(" ", "_")
+    safe_title = safe_title[:50] or "learning"
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    path = LEARNING_LOG_DIR / f"{timestamp}_{safe_title}.md"
+
+    path.write_text(f"# {title}\n\n{content}\n", encoding="utf-8")
+    return f"学習記録を保存しました: {path}"
