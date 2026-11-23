@@ -5,12 +5,16 @@
 """
 
 import json
+import random
+import re
+from datetime import datetime
 from functools import cache
 from pathlib import Path
 
 from app.config import api_error_message
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+LEARNING_LOG_DIR = Path(__file__).resolve().parent.parent / "learning_log"
 MAX_RESULTS = 3
 
 
@@ -126,3 +130,40 @@ def search_graph(query: str) -> str:
         return json.dumps({"error": str(e)}, ensure_ascii=False)
     except APIError as e:
         return json.dumps({"error": api_error_message(e.code)}, ensure_ascii=False)
+def make_quiz(lecture: int) -> str:
+    """指定した回の用語クイズをランダムに1問作る。
+
+    学習者に復習問題を出したいときや、第○回の用語を確認したいときに使う。
+    lecture は1始まりの整数で指定する。
+    """
+    terms = [term for term in load_glossary() if term["lecture"] == lecture]
+    if not terms:
+        return json.dumps(
+            {"question": "", "answer": f"第{lecture}回の用語は用語集にありません。"},
+            ensure_ascii=False,
+        )
+
+    term = random.choice(terms)
+    return json.dumps(
+        {
+            "question": f"「{term['term']}」の意味は？",
+            "answer": term["definition"],
+        },
+        ensure_ascii=False,
+    )
+
+
+def save_learning_log(title: str, content: str) -> str:
+    """学習した内容を learning_log フォルダに Markdown として保存する。
+
+    title は保存する学習記録の見出し、content は本文として使う。
+    """
+    LEARNING_LOG_DIR.mkdir(parents=True, exist_ok=True)
+    safe_title = re.sub(r"[^\w\- ]", "", title, flags=re.UNICODE).strip()
+    safe_title = safe_title.replace(" ", "_")
+    safe_title = safe_title[:50] or "learning"
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    path = LEARNING_LOG_DIR / f"{timestamp}_{safe_title}.md"
+
+    path.write_text(f"# {title}\n\n{content}\n", encoding="utf-8")
+    return f"学習記録を保存しました: {path}"
